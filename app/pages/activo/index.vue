@@ -6,6 +6,14 @@
         <h2 class="font-medium mb-2">Resumen</h2>
         <p class="text-sm text-slate-600">Total de activos: <span class="font-semibold">{{ activos?.length ?? 0 }}</span></p>
       </div>
+      <div>
+          <NuxtLink
+          to="/activo/add"
+          class="px-3 py-1.5 rounded-full bg-white border text-slate-800 hover:bg-slate-50"
+        >
+          Agregar Activo
+          </NuxtLink>
+        </div>
       
     </div>
     <div class="mt-6 rounded-lg bg-white shadow">
@@ -55,10 +63,8 @@ type Asset = {
   dep_acomulada: string | number;
   departamentId?: number | string;
 }
-const API_BASE = 'http://localhost:3000'
-const { data, pending, error } = await useAsyncData<Asset[]>('activos', () =>
-  $fetch<Asset[]>(`${API_BASE}/assets`)
-)
+const { public: { apiBase } } = useRuntimeConfig()
+const { data, pending, error } = await useFetch<Asset[]>(`${apiBase}/assets`)
 
 const activos = computed<Asset[]>(() => (data.value ?? []))
 </script>

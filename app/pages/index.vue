@@ -28,16 +28,9 @@
 <script setup lang="ts">
 type Asset = { id: number | string }
 type Departamento = { id: number | string; nombre: string }
-const API_BASE = 'http://localhost:3000'
-
-const { data: assetsData, pending: pendingAssets, error: errorAssets } = await useAsyncData<Asset[]>(
-  'home-assets',
-  () => $fetch<Asset[]>(`${API_BASE}/assets`)
-)
-const { data: depsData, pending: pendingDeps, error: errorDeps } = await useAsyncData<Departamento[]>(
-  'home-deps',
-  () => $fetch<Departamento[]>(`${API_BASE}/departments`)
-)
+const { public: { apiBase } } = useRuntimeConfig()
+const { data: assetsData, pending: pendingAssets, error: errorAssets } = await useFetch<Asset[]>(`${apiBase}/assets`)
+const { data: depsData, pending: pendingDeps, error: errorDeps } = await useFetch<Departamento[]>(`${apiBase}/departments`)
 
 const totalActivos = computed(() => (assetsData.value?.length ?? 0))
 const departamentos = computed(() => (depsData.value ?? []))
