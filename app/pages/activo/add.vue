@@ -1,6 +1,5 @@
 <template>
   <section class="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-8">
-    <!-- Título con indicador de borrador -->
     <div class="w-full max-w-3xl px-4 mb-6">
       <div class="flex justify-between items-center">
         <div>
@@ -22,78 +21,70 @@
       </div>
     </div>
 
-    <!-- Formulario Centrado -->
     <div class="w-full max-w-3xl px-4">
       <div class="rounded-lg bg-white shadow p-6">
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Información Básica -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Nombre -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Nombre del Activo *
               </label>
               <input
-                v-model="formData.nombre"
+                v-model="formData.name"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                 placeholder="Ej: Computadora Dell XPS"
               >
             </div>
 
-            <!-- Código -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Código *
               </label>
               <input
-                v-model="formData.codigo"
+                v-model="formData.code"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                 placeholder="Ej: ACT-001"
               >
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Rótulo -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Rótulo *
               </label>
               <input
-                v-model="formData.rotulo"
+                v-model="formData.label"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                 placeholder="Ej: ROT-2024-001"
               >
             </div>
 
-            <!-- Departamento -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Departamento
               </label>
               <select
-                v-model="formData.departamentId"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                v-model="formData.departmentId"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
               >
                 <option value="">Seleccionar departamento</option>
-                <option v-for="dept in departamentos" :key="dept.id" :value="dept.id">
-                  {{ dept.nombre }}
+                <option v-for="department in departments" :key="department.id" :value="department.id">
+                  {{ department.nombre }}
                 </option>
               </select>
             </div>
           </div>
 
-          <!-- Valores Financieros -->
           <div class="bg-gray-50 p-4 rounded-lg">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Valores Financieros</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Valor Inicial -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   Valor Inicial *
@@ -103,18 +94,17 @@
                     $
                   </span>
                   <input
-                    v-model="formData.val_inicial"
+                    v-model="formData.initialValue"
                     type="number"
                     step="0.01"
                     min="0"
                     required
-                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                     placeholder="0.00"
                   >
                 </div>
               </div>
 
-              <!-- Valor Residual -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   Valor Residual *
@@ -124,18 +114,17 @@
                     $
                   </span>
                   <input
-                    v-model="formData.val_residual"
+                    v-model="formData.residualValue"
                     type="number"
                     step="0.01"
                     min="0"
                     required
-                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                     placeholder="0.00"
                   >
                 </div>
               </div>
 
-              <!-- Depreciación Acumulada -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   Depreciación Acumulada
@@ -145,11 +134,11 @@
                     $
                   </span>
                   <input
-                    v-model="formData.dep_acomulada"
+                    v-model="formData.accumulatedDepreciation"
                     type="number"
                     step="0.01"
                     min="0"
-                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                    class="pl-8 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                     placeholder="0.00"
                   >
                 </div>
@@ -157,12 +146,11 @@
               </div>
             </div>
 
-            <!-- Valor Neto (Calculado) -->
             <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <div class="flex justify-between items-center">
                 <span class="text-sm font-medium text-blue-800">Valor Neto:</span>
                 <span class="text-lg font-bold text-blue-900">
-                  ${{ valorNeto.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  ${{ netValue.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
                 </span>
               </div>
               <p class="text-xs text-blue-600 mt-1">
@@ -171,7 +159,6 @@
             </div>
           </div>
 
-          <!-- Botones -->
           <div class="flex justify-between items-center pt-6 border-t">
             <button
               type="button"
@@ -188,7 +175,7 @@
               <button
                 type="button"
                 @click="onCancel"
-                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -196,7 +183,7 @@
                 type="submit"
                 :disabled="isSubmitting || !isFormValid"
                 :class="[
-                  'px-5 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] transition-colors',
+                  'px-5 py-2.5 rounded-md',
                   isSubmitting || !isFormValid
                     ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
                     : 'bg-[#004aad] text-white hover:bg-[#003a8a]'
@@ -222,76 +209,48 @@
 </template>
 
 <script setup lang="ts">
-import type { Toast as ToastType } from '~/components/Toasts.vue'
-import { ref, watch, onMounted, computed } from 'vue'
-import { navigateTo } from 'nuxt/app'
+import type { Toast } from '~/components/Toasts.vue'
 
+const { public: { apiBase } } = useRuntimeConfig()
 const STORAGE_KEY = 'form-activo-creacion'
 
-// Estado del formulario según tu modelo Asset
+interface Department {
+  id: number | string
+  nombre: string
+  responsableId?: number | string
+}
+
 const formData = ref({
-  nombre: '',
-  codigo: '',
-  rotulo: '',
-  val_inicial: 0,
-  val_residual: 0,
-  dep_acomulada: 0,
-  departamentId: null as number | null
+  name: '',
+  code: '',
+  label: '',
+  initialValue: 0,
+  residualValue: 0,
+  accumulatedDepreciation: 0,
+  departmentId: null as number | null
 })
 
+const { data: departmentsData } = await useFetch<Department[]>(`${apiBase}/departments`)
+const departments = computed(() => departmentsData.value ?? [])
 
-const isSubmitting = ref(false)
-const toasts = ref<ToastType[]>([])
-
-// Computed para validaciones y cálculos
-const valorNeto = computed(() => {
-  const inicial = parseFloat(formData.value.val_inicial.toString()) || 0
-  const depreciacion = parseFloat(formData.value.dep_acomulada.toString()) || 0
-  return inicial - depreciacion
+const netValue = computed(() => {
+  const initial = parseFloat(formData.value.initialValue.toString()) || 0
+  const depreciation = parseFloat(formData.value.accumulatedDepreciation.toString()) || 0
+  return initial - depreciation
 })
 
 const isFormValid = computed(() => {
   return (
-    formData.value.nombre.trim() !== '' &&
-    formData.value.codigo.trim() !== '' &&
-    formData.value.rotulo.trim() !== '' &&
-    formData.value.val_inicial > 0 &&
-    formData.value.val_residual >= 0
+    formData.value.name.trim() !== '' &&
+    formData.value.code.trim() !== '' &&
+    formData.value.label.trim() !== '' &&
+    formData.value.initialValue > 0 &&
+    formData.value.residualValue >= 0
   )
 })
 
-// Funciones localStorage
-function saveToLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData.value))
-  } catch (error) {
-    console.error('Error guardando:', error)
-  }
-}
-
-function loadFromLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    const savedData = localStorage.getItem(STORAGE_KEY)
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      Object.assign(formData.value, parsedData)
-      showToast('Datos del borrador recuperados', 'success')
-    }
-  } catch (error) {
-    console.error('Error cargando:', error)
-  }
-}
-
-function clearLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem(STORAGE_KEY)
-  } catch (error) {
-    console.error('Error limpiando:', error)
-  }
-}
+const isSubmitting = ref(false)
+const toasts = ref<Toast[]>([])
 
 const hasDraftSaved = computed(() => {
   if (typeof window === 'undefined') return false
@@ -308,27 +267,45 @@ const hasDraftSaved = computed(() => {
   }
 })
 
+function saveToLocalStorage() {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData.value))
+}
+
+function loadFromLocalStorage() {
+  if (typeof window === 'undefined') return
+  const savedData = localStorage.getItem(STORAGE_KEY)
+  if (savedData) {
+    const parsedData = JSON.parse(savedData)
+    Object.assign(formData.value, parsedData)
+  }
+}
+
+function clearLocalStorage() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 function clearDraft() {
   if (confirm('¿Estás seguro de eliminar el borrador guardado?')) {
     clearLocalStorage()
     formData.value = {
-      nombre: '',
-      codigo: '',
-      rotulo: '',
-      val_inicial: 0,
-      val_residual: 0,
-      dep_acomulada: 0,
-      departamentId: null
+      name: '',
+      code: '',
+      label: '',
+      initialValue: 0,
+      residualValue: 0,
+      accumulatedDepreciation: 0,
+      departmentId: null
     }
-    showToast('Borrador eliminado', 'success')
   }
 }
 
 function showToast(message: string, type: 'success' | 'error') {
-  const id = Date.now() + Math.random()
+  const id = Date.now()
   toasts.value.push({ id, message, type })
-  setTimeout(() => { 
-    toasts.value = toasts.value.filter(t => t.id !== id) 
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id)
   }, 2500)
 }
 
@@ -338,59 +315,70 @@ async function handleSubmit() {
   try {
     isSubmitting.value = true
     
-    // Validaciones adicionales
-    if (formData.value.val_residual > formData.value.val_inicial) {
+    if (formData.value.residualValue > formData.value.initialValue) {
       showToast('El valor residual no puede ser mayor al valor inicial', 'error')
       isSubmitting.value = false
       return
     }
     
-    if (formData.value.dep_acomulada > formData.value.val_inicial) {
+    if (formData.value.accumulatedDepreciation > formData.value.initialValue) {
       showToast('La depreciación no puede ser mayor al valor inicial', 'error')
       isSubmitting.value = false
       return
     }
     
-    // Preparar datos para enviar
-    const assetData = {
-      ...formData.value,
-      val_inicial: parseFloat(formData.value.val_inicial.toString()),
-      val_residual: parseFloat(formData.value.val_residual.toString()),
-      dep_acomulada: parseFloat(formData.value.dep_acomulada.toString())
-    }
+    const response = await $fetch(`${apiBase}/assets/create`, {
+      method: 'POST',
+      body: {
+        nombre: formData.value.name.trim(),
+        codigo: formData.value.code.trim().toUpperCase(),
+        rotulo: formData.value.label.trim(),  
+        val_inicial: parseFloat(formData.value.initialValue.toString()),  
+        val_residual: parseFloat(formData.value.residualValue.toString()),  
+        dep_acomulada: parseFloat(formData.value.accumulatedDepreciation.toString()),  
+        departamentId: formData.value.departmentId ?? null
+      },
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     
-    // Aquí iría la llamada a tu API
-    // Ejemplo:
-    // await $fetch('/api/assets', {
-    //   method: 'POST',
-    //   body: assetData
-    // })
-    
-    // Simulación API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    console.log('Respuesta del servidor:', response)
     
     showToast('Activo creado exitosamente', 'success')
     clearLocalStorage()
     
-    // Limpiar formulario
     formData.value = {
-      nombre: '',
-      codigo: '',
-      rotulo: '',
-      val_inicial: 0,
-      val_residual: 0,
-      dep_acomulada: 0,
-      departamentId: null
+      name: '',
+      code: '',
+      label: '',
+      initialValue: 0,
+      residualValue: 0,
+      accumulatedDepreciation: 0,
+      departmentId: null
     }
     
-    // Redirigir después de 1.5 segundos
     setTimeout(() => {
-      navigateTo('/assets')
+      navigateTo('/activo')
     }, 1500)
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al crear activo:', error)
-    showToast('Error al crear el activo. Intenta nuevamente.', 'error')
+    
+    if (error?.response) {
+      console.error('Response status:', error.response.status)
+      console.error('Response data:', error.response._data)
+    }
+    
+    if (error?.status === 409) {
+      showToast('El código ya existe. Por favor, usa otro código.', 'error')
+    } else if (error?.status === 404) {
+      showToast('Endpoint no encontrado. Verifica la URL del backend.', 'error')
+    } else if (error?.status === 500) {
+      showToast('Error interno del servidor. Intenta nuevamente.', 'error')
+    } else {
+      showToast('Error al crear el activo. Intenta nuevamente.', 'error')
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -400,19 +388,24 @@ function onCancel() {
   navigateTo('/activo')
 }
 
-// Hooks
 onMounted(() => {
   loadFromLocalStorage()
 })
 
-watch(
-  formData,
-  () => {
-    const timer = setTimeout(() => {
-      saveToLocalStorage()
-    }, 500)
-    return () => clearTimeout(timer)
-  },
-  { deep: true }
-)
+watch(formData, () => {
+  const timer = setTimeout(() => {
+    saveToLocalStorage()
+  }, 500)
+  return () => clearTimeout(timer)
+}, { deep: true })
 </script>
+
+<style>
+.w-full {
+  width: 100% !important;
+}
+
+input:focus, select:focus {
+  box-shadow: 0 0 0 2px rgba(0, 74, 173, 0.2);
+}
+</style>

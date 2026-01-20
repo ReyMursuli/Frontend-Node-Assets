@@ -1,6 +1,5 @@
 <template>
   <section class="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-8">
-    <!-- Título con indicador de borrador -->
     <div class="w-full max-w-2xl px-4 mb-6">
       <div class="flex justify-between items-center">
         <div>
@@ -22,13 +21,10 @@
       </div>
     </div>
 
-    <!-- Formulario Centrado -->
     <div class="w-full max-w-2xl px-4">
       <div class="rounded-lg bg-white shadow p-6">
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Información del Departamento -->
           <div class="space-y-4">
-            <!-- Nombre -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Nombre del Departamento *
@@ -37,12 +33,11 @@
                 v-model="formData.nombre"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                 placeholder="Ej: Recursos Humanos"
               >
             </div>
 
-            <!-- Código -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Código Único *
@@ -58,7 +53,7 @@
                   type="text"
                   required
                   :class="[
-                    'pl-10 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent',
+                    'w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]',
                     codigoError ? 'border-red-300' : 'border-gray-300'
                   ]"
                   placeholder="Ej: DEP-RH-001"
@@ -73,7 +68,6 @@
               </p>
             </div>
 
-            <!-- Responsable -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Responsable
@@ -86,7 +80,7 @@
                 </div>
                 <select
                   v-model="formData.responsableId"
-                  class="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] focus:border-transparent"
+                  class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
                 >
                   <option value="">Seleccionar responsable</option>
                   <option v-for="user in usuarios" :key="user.id" :value="user.id">
@@ -100,7 +94,6 @@
             </div>
           </div>
           
-          <!-- Botones -->
           <div class="flex justify-between items-center pt-6 border-t">
             <button
               type="button"
@@ -117,7 +110,7 @@
               <button
                 type="button"
                 @click="onCancel"
-                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancelar
               </button>
@@ -125,7 +118,7 @@
                 type="submit"
                 :disabled="isSubmitting || !isFormValid || codigoError"
                 :class="[
-                  'px-5 py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad] transition-colors',
+                  'px-5 py-2.5 rounded-md',
                   isSubmitting || !isFormValid || codigoError
                     ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
                     : 'bg-[#004aad] text-white hover:bg-[#003a8a]'
@@ -151,14 +144,22 @@
 </template>
 
 <script setup lang="ts">
-import type { Toast as ToastType } from '~/components/Toasts.vue'
-import { ref, watch, onMounted, computed } from 'vue'
-import { navigateTo } from 'nuxt/app'
-const { public: { apiBase } } = useRuntimeConfig()
+import type { Toast } from '~/components/Toasts.vue'
+import { navigateTo } from '#app'
 
+const { public: { apiBase } } = useRuntimeConfig()
 const STORAGE_KEY = 'form-departamento-creacion'
 
-// Estado del formulario según tu modelo Departament
+interface Usuario {
+  id: number | string
+  username?: string
+  nombre?: string
+  email?: string
+}
+
+const { data } = await useFetch<Usuario[]>(`${apiBase}/usuarios?rol=responsable`)
+const usuarios = computed(() => data.value ?? [])
+
 const formData = ref({
   nombre: '',
   codigo: '',
@@ -167,17 +168,12 @@ const formData = ref({
 
 const codigoError = ref('')
 const isSubmitting = ref(false)
-const toasts = ref<ToastType[]>([])
+const toasts = ref<Toast[]>([])
 
-// Computed para validaciones
 const isFormValid = computed(() => {
-  return (
-    formData.value.nombre.trim() !== '' &&
-    formData.value.codigo.trim() !== ''
-  )
+  return formData.value.nombre.trim() !== '' && formData.value.codigo.trim() !== ''
 })
 
-// Validar formato del código
 function validateCodigo() {
   const codigo = formData.value.codigo.trim()
   
@@ -186,51 +182,16 @@ function validateCodigo() {
     return
   }
   
-  // Validar formato (ejemplo: DEP-XXX-001, RH-2024, etc.)
   const regex = /^[A-Za-z0-9\-_]+$/
   
   if (!regex.test(codigo)) {
     codigoError.value = 'Solo se permiten letras, números, guiones y guiones bajos'
   } else if (codigo.length < 3) {
     codigoError.value = 'El código debe tener al menos 3 caracteres'
-  } else if (codigo.length > 50) {
-    codigoError.value = 'El código no puede exceder 50 caracteres'
+  } else if (codigo.length > 6) {
+    codigoError.value = 'El código no puede exceder 6 caracteres'
   } else {
     codigoError.value = ''
-  }
-}
-
-// Funciones localStorage
-function saveToLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData.value))
-  } catch (error) {
-    console.error('Error guardando:', error)
-  }
-}
-
-function loadFromLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    const savedData = localStorage.getItem(STORAGE_KEY)
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      Object.assign(formData.value, parsedData)
-      validateCodigo() // Revalidar el código al cargar
-      showToast('Datos del borrador recuperados', 'success')
-    }
-  } catch (error) {
-    console.error('Error cargando:', error)
-  }
-}
-
-function clearLocalStorage() {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.removeItem(STORAGE_KEY)
-  } catch (error) {
-    console.error('Error limpiando:', error)
   }
 }
 
@@ -241,32 +202,46 @@ const hasDraftSaved = computed(() => {
     if (!savedData) return false
     const parsedData = JSON.parse(savedData)
     return Object.values(parsedData).some(value => 
-      (typeof value === 'string' && value.trim() !== '') ||
-      value !== null
+      (typeof value === 'string' && value.trim() !== '') || value !== null
     )
   } catch {
     return false
   }
 })
 
+function saveToLocalStorage() {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData.value))
+}
+
+function loadFromLocalStorage() {
+  if (typeof window === 'undefined') return
+  const savedData = localStorage.getItem(STORAGE_KEY)
+  if (savedData) {
+    const parsedData = JSON.parse(savedData)
+    Object.assign(formData.value, parsedData)
+    validateCodigo()
+  }
+}
+
+function clearLocalStorage() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 function clearDraft() {
   if (confirm('¿Estás seguro de eliminar el borrador guardado?')) {
     clearLocalStorage()
-    formData.value = {
-      nombre: '',
-      codigo: '',
-      responsableId: null
-    }
+    formData.value = { nombre: '', codigo: '', responsableId: null }
     codigoError.value = ''
-    showToast('Borrador eliminado', 'success')
   }
 }
 
 function showToast(message: string, type: 'success' | 'error') {
-  const id = Date.now() + Math.random()
+  const id = Date.now()
   toasts.value.push({ id, message, type })
-  setTimeout(() => { 
-    toasts.value = toasts.value.filter(t => t.id !== id) 
+  setTimeout(() => {
+    toasts.value = toasts.value.filter(t => t.id !== id)
   }, 2500)
 }
 
@@ -276,45 +251,42 @@ async function handleSubmit() {
   try {
     isSubmitting.value = true
     
-    // Preparar datos para enviar
     const departamentoData = {
       nombre: formData.value.nombre.trim(),
       codigo: formData.value.codigo.trim().toUpperCase(),
       responsableId: formData.value.responsableId
     }
     
-    await $fetch(`${apiBase}/departments/create`, {
-  method: 'POST',
-  body: {
-    nombre: formData.value.nombre.trim(),
-    codigo: formData.value.codigo.trim().toUpperCase(),
-    responsableId: formData.value.responsableId ?? null
-  }
-})
+    const response = await $fetch(`${apiBase}/departments/create`, {
+      method: 'POST',
+      body: departamentoData,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    console.log('Respuesta del servidor:', response)
     
     showToast('Departamento creado exitosamente', 'success')
     clearLocalStorage()
     
-    // Limpiar formulario
-    formData.value = {
-      nombre: '',
-      codigo: '',
-      responsableId: null
-    }
+    formData.value = { nombre: '', codigo: '', responsableId: null }
     codigoError.value = ''
     
-    // Redirigir después de 1.5 segundos
     setTimeout(() => {
-      navigateTo('/departments')
+      navigateTo('/departamentos')
     }, 1500)
     
   } catch (error: any) {
     console.error('Error al crear departamento:', error)
     
-    // Manejo de errores específicos
-    if (error.status === 409) {
+    if (error?.status === 409) {
       showToast('El código ya existe. Por favor, usa otro código.', 'error')
       codigoError.value = 'Este código ya está en uso'
+    } else if (error?.status === 404) {
+      showToast('Endpoint no encontrado. Verifica la URL del backend.', 'error')
+    } else if (error?.status === 500) {
+      showToast('Error interno del servidor. Intenta nuevamente.', 'error')
     } else {
       showToast('Error al crear el departamento. Intenta nuevamente.', 'error')
     }
@@ -327,31 +299,18 @@ function onCancel() {
   navigateTo('/departamentos')
 }
 
-// Hooks
 onMounted(() => {
   loadFromLocalStorage()
 })
 
-watch(
-  formData,
-  () => {
-    const timer = setTimeout(() => {
-      saveToLocalStorage()
-    }, 500)
-    return () => clearTimeout(timer)
-  },
-  { deep: true }
-)
+watch(formData, () => {
+  const timer = setTimeout(() => {
+    saveToLocalStorage()
+  }, 500)
+  return () => clearTimeout(timer)
+}, { deep: true })
 
-// Validar código al cambiar
-watch(
-  () => formData.value.codigo,
-  () => {
-    validateCodigo()
-  }
-)
+watch(() => formData.value.codigo, () => {
+  validateCodigo()
+})
 </script>
-
-<style scoped>
-/* Estilos personalizados */
-</style>

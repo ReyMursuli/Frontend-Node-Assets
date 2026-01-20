@@ -398,7 +398,7 @@ async function handleSubmit() {
     formDataToSend.append('rol', formData.value.rol)
     
     if (formData.value.foto) {
-      formDataToSend.append('foto', formData.value.foto)
+      formDataToSend.append('profileImage', formData.value.foto)
     }
 await $fetch(`${apiBase}/usuarios/create`, {
   method: 'POST',

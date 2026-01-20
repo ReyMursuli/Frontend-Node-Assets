@@ -1,15 +1,17 @@
 <template>
   <section>
-    <h1 class="text-2xl font-semibold text-[\#004aad] mb-4">Responsables</h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-semibold text-[#004aad]">Responsables</h1>
+      <NuxtLink
+        to="/responsable/add"
+        class="flex items-center gap-1 px-4 py-2 rounded-md bg-[#004aad] text-white hover:bg-[#003d8f] transition-colors"
+      >
+        <span>+</span> Agregar usuario
+      </NuxtLink>
+    </div>
     <div class="rounded-lg bg-white shadow">
-      <div class="border-b px-4 py-3 flex items-center justify-between">
+      <div class="border-b px-4 py-3">
         <span class="font-medium">Total de usuarios <span class="text-slate-500 font-normal">(Total: {{ usuarios.length }})</span></span>
-        <NuxtLink
-          to="/responsable/add"
-          class="px-3 py-1.5 rounded-full bg-white border text-slate-800 hover:bg-slate-50"
-        >
-          Agregar usuario
-        </NuxtLink>
       </div>
       <div class="p-4">
         <div v-if="pending" class="text-slate-600">Cargando responsables...</div>
