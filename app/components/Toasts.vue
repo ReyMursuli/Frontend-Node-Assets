@@ -3,7 +3,7 @@
     <div
       v-for="t in toasts"
       :key="t.id"
-      class="px-4 py-2 rounded-md shadow text-white"
+      class="px-4 py-2 rounded-md shadow text-white transition-all duration-300"
       :class="t.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'"
     >
       {{ t.message }}
@@ -12,8 +12,6 @@
 </template>
 
 <script setup lang="ts">
-export type Toast = { id: number; message: string; type: 'success' | 'error' }
-defineProps<{ toasts: Toast[] }>()
+// Importamos la lista global
+const { toasts } = useToast()
 </script>
-
-

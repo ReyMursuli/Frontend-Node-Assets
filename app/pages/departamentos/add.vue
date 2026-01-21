@@ -1,316 +1,69 @@
 <template>
-  <section class="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-8">
-    <div class="w-full max-w-2xl px-4 mb-6">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-semibold text-[#004aad]">Agregar Departamento</h1>
-          <p class="text-gray-600 mt-2">Complete los datos del nuevo departamento</p>
+  <div class="max-w-2xl mx-auto pt-8 px-4">
+    <h1 class="text-2xl font-bold mb-6 text-[#004aad]">Agregar Departamento</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+      <form @submit.prevent="submitForm" class="space-y-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre del Departamento *</label>
+            <input v-model="formData.nombre" type="text" placeholder="Ej: Recursos Humanos" class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#004aad] border-gray-300 shadow-sm">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Código *</label>
+            <input v-model="formData.codigo" type="text" placeholder="Ej: RRHH-01" class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#004aad] border-gray-300 shadow-sm">
+          </div>
+
+          <CommonSelect 
+            v-model="formData.responsableId"
+            label="Responsable del Departamento"
+            :options="usuarios"
+            :disabled="loadingUsers"
+          />
         </div>
-        
-        <div 
-          v-if="hasDraftSaved" 
-          class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2"
-        >
-          <div class="flex items-center text-sm text-blue-700">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            <span>Borrador guardado</span>
-          </div>
+
+        <div class="flex justify-end space-x-4 pt-8 border-t border-gray-100">
+          <button type="button" @click="navigateTo('/departamentos')" class="px-6 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+          <button type="submit" :disabled="isSubmitting" class="px-8 py-2.5 rounded-lg font-bold text-white bg-[#004aad] hover:bg-[#003580] disabled:bg-gray-400">
+            {{ isSubmitting ? 'Guardando...' : 'Registrar Departamento' }}
+          </button>
         </div>
-      </div>
+      </form>
     </div>
-
-    <div class="w-full max-w-2xl px-4">
-      <div class="rounded-lg bg-white shadow p-6">
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Nombre del Departamento *
-              </label>
-              <input
-                v-model="formData.nombre"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
-                placeholder="Ej: Recursos Humanos"
-              >
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Código Único *
-              </label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.2 6.5 10.266a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
-                  </svg>
-                </div>
-                <input
-                  v-model="formData.codigo"
-                  type="text"
-                  required
-                  :class="[
-                    'w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]',
-                    codigoError ? 'border-red-300' : 'border-gray-300'
-                  ]"
-                  placeholder="Ej: DEP-RH-001"
-                  @input="validateCodigo"
-                >
-              </div>
-              <p v-if="codigoError" class="text-xs text-red-500 mt-1">
-                {{ codigoError }}
-              </p>
-              <p v-else class="text-xs text-gray-500 mt-1">
-                Código único para identificar el departamento
-              </p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Responsable
-              </label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                  </svg>
-                </div>
-                <select
-                  v-model="formData.responsableId"
-                  class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#004aad]"
-                >
-                  <option value="">Seleccionar responsable</option>
-                  <option v-for="user in usuarios" :key="user.id" :value="user.id">
-                    {{ user.username }} - {{ user.email }}
-                  </option>
-                </select>
-              </div>
-              <p class="text-xs text-gray-500 mt-1">
-                Persona encargada del departamento (opcional)
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex justify-between items-center pt-6 border-t">
-            <button
-              type="button"
-              @click="clearDraft"
-              class="text-sm text-gray-500 hover:text-gray-700"
-              v-if="hasDraftSaved"
-            >
-              <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-              Eliminar borrador
-            </button>
-            <div class="flex space-x-3" :class="hasDraftSaved ? 'ml-auto' : 'ml-auto'">
-              <button
-                type="button"
-                @click="onCancel"
-                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                :disabled="isSubmitting || !isFormValid || codigoError"
-                :class="[
-                  'px-5 py-2.5 rounded-md',
-                  isSubmitting || !isFormValid || codigoError
-                    ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
-                    : 'bg-[#004aad] text-white hover:bg-[#003a8a]'
-                ]"
-              >
-                <span v-if="isSubmitting" class="flex items-center">
-                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                  </svg>
-                  Creando...
-                </span>
-                <span v-else>Crear Departamento</span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <Toasts :toasts="toasts" />
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import type { Toast } from '~/components/Toasts.vue'
-import { navigateTo } from '#app'
+const { 
+  formData, isSubmitting, loadingUsers, usuarios, 
+  apiBase, validate, loadDraft, saveDraft, clearDraft, fetchUsers, addToast 
+} = useDepartmentForm('dept-add-draft')
 
-const { public: { apiBase } } = useRuntimeConfig()
-const STORAGE_KEY = 'form-departamento-creacion'
-
-interface Usuario {
-  id: number | string
-  username?: string
-  nombre?: string
-  email?: string
-}
-
-const { data } = await useFetch<Usuario[]>(`${apiBase}/usuarios?rol=responsable`)
-const usuarios = computed(() => data.value ?? [])
-
-const formData = ref({
-  nombre: '',
-  codigo: '',
-  responsableId: null as number | null
+onMounted(() => {
+  loadDraft()
+  fetchUsers()
 })
 
-const codigoError = ref('')
-const isSubmitting = ref(false)
-const toasts = ref<Toast[]>([])
+// Guardar borrador automáticamente al cambiar cualquier campo
+watch(() => formData.value, () => saveDraft(), { deep: true })
 
-const isFormValid = computed(() => {
-  return formData.value.nombre.trim() !== '' && formData.value.codigo.trim() !== ''
-})
+const submitForm = async () => {
+  if (!validate()) return
 
-function validateCodigo() {
-  const codigo = formData.value.codigo.trim()
-  
-  if (codigo.length === 0) {
-    codigoError.value = ''
-    return
-  }
-  
-  const regex = /^[A-Za-z0-9\-_]+$/
-  
-  if (!regex.test(codigo)) {
-    codigoError.value = 'Solo se permiten letras, números, guiones y guiones bajos'
-  } else if (codigo.length < 3) {
-    codigoError.value = 'El código debe tener al menos 3 caracteres'
-  } else if (codigo.length > 6) {
-    codigoError.value = 'El código no puede exceder 6 caracteres'
-  } else {
-    codigoError.value = ''
-  }
-}
-
-const hasDraftSaved = computed(() => {
-  if (typeof window === 'undefined') return false
+  isSubmitting.value = true
   try {
-    const savedData = localStorage.getItem(STORAGE_KEY)
-    if (!savedData) return false
-    const parsedData = JSON.parse(savedData)
-    return Object.values(parsedData).some(value => 
-      (typeof value === 'string' && value.trim() !== '') || value !== null
-    )
-  } catch {
-    return false
-  }
-})
-
-function saveToLocalStorage() {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData.value))
-}
-
-function loadFromLocalStorage() {
-  if (typeof window === 'undefined') return
-  const savedData = localStorage.getItem(STORAGE_KEY)
-  if (savedData) {
-    const parsedData = JSON.parse(savedData)
-    Object.assign(formData.value, parsedData)
-    validateCodigo()
-  }
-}
-
-function clearLocalStorage() {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem(STORAGE_KEY)
-}
-
-function clearDraft() {
-  if (confirm('¿Estás seguro de eliminar el borrador guardado?')) {
-    clearLocalStorage()
-    formData.value = { nombre: '', codigo: '', responsableId: null }
-    codigoError.value = ''
-  }
-}
-
-function showToast(message: string, type: 'success' | 'error') {
-  const id = Date.now()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 2500)
-}
-
-async function handleSubmit() {
-  if (isSubmitting.value || !isFormValid.value || codigoError.value) return
-  
-  try {
-    isSubmitting.value = true
-    
-    const departamentoData = {
-      nombre: formData.value.nombre.trim(),
-      codigo: formData.value.codigo.trim().toUpperCase(),
-      responsableId: formData.value.responsableId
-    }
-    
-    const response = await $fetch(`${apiBase}/departments/create`, {
-      method: 'POST',
-      body: departamentoData,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    await $fetch(`${apiBase}/departments/create`, { 
+      method: 'POST', 
+      body: formData.value 
     })
-    
-    console.log('Respuesta del servidor:', response)
-    
-    showToast('Departamento creado exitosamente', 'success')
-    clearLocalStorage()
-    
-    formData.value = { nombre: '', codigo: '', responsableId: null }
-    codigoError.value = ''
-    
-    setTimeout(() => {
-      navigateTo('/departamentos')
-    }, 1500)
-    
-  } catch (error: any) {
-    console.error('Error al crear departamento:', error)
-    
-    if (error?.status === 409) {
-      showToast('El código ya existe. Por favor, usa otro código.', 'error')
-      codigoError.value = 'Este código ya está en uso'
-    } else if (error?.status === 404) {
-      showToast('Endpoint no encontrado. Verifica la URL del backend.', 'error')
-    } else if (error?.status === 500) {
-      showToast('Error interno del servidor. Intenta nuevamente.', 'error')
-    } else {
-      showToast('Error al crear el departamento. Intenta nuevamente.', 'error')
-    }
+    addToast('¡Creado con éxito!', 'success')
+    clearDraft() // Importante: Limpiar el localStorage al éxito
+    setTimeout(() => navigateTo('/departamentos'), 500)
+  } catch (e: any) {
+    addToast(e.data?.message || 'Error al crear', 'error')
   } finally {
     isSubmitting.value = false
   }
 }
-
-function onCancel() {
-  navigateTo('/departamentos')
-}
-
-onMounted(() => {
-  loadFromLocalStorage()
-})
-
-watch(formData, () => {
-  const timer = setTimeout(() => {
-    saveToLocalStorage()
-  }, 500)
-  return () => clearTimeout(timer)
-}, { deep: true })
-
-watch(() => formData.value.codigo, () => {
-  validateCodigo()
-})
 </script>
