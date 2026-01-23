@@ -22,6 +22,8 @@
         />
       </div>
     </div>
+
+    <Toasts />
   </section>
 </template>
 
@@ -31,6 +33,8 @@ import { watch } from 'vue'
 const route = useRoute()
 const { public: { apiBase } } = useRuntimeConfig()
 const id = route.params.id
+
+const { addToast } = useToast()
 
 // 1. Inicializamos la lógica del formulario
 // Usamos un ID único para el borrador de edición
@@ -44,9 +48,15 @@ const {
 
 // 2. Obtener los datos actuales del backend
 // Según tu ruta: GET /usuarios/:id
-const { data: response, pending } = await useFetch<any>(`${apiBase}/usuarios/${id}`, {
+const { data: response, pending, error: fetchError } = await useFetch<any>(`${apiBase}/usuarios/${id}`, {
   key: `user-data-${id}`
 })
+
+watch(fetchError, (e) => {
+  if (e) {
+    addToast('No se pudieron cargar los datos del responsable', 'error')
+  }
+}, { immediate: true })
 
 // 3. Llenar el formulario con los datos recibidos
 watch(response, (newData) => {
@@ -65,7 +75,10 @@ watch(response, (newData) => {
 
 // 4. Lógica de Envío (Update)
 const handleUpdate = async () => {
-  if (!validate()) return
+  if (!validate()) {
+    addToast('Revisa los campos requeridos antes de actualizar', 'error')
+    return
+  }
 
   isSubmitting.value = true
   
@@ -89,13 +102,16 @@ const handleUpdate = async () => {
       body
     })
 
-    // Si todo sale bien, volvemos al listado
-    navigateTo('/responsable')
+    addToast('Responsable actualizado correctamente', 'success')
+
+    setTimeout(() => {
+      navigateTo('/responsable')
+    }, 500)
     
   } catch (err: any) {
     console.error('Error al actualizar:', err)
     const errorMsg = err.data?.message || 'Error al comunicarse con el servidor'
-    alert(`No se pudo actualizar: ${errorMsg}`)
+    addToast(`No se pudo actualizar: ${errorMsg}`, 'error')
   } finally {
     isSubmitting.value = false
   }
