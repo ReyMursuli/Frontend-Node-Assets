@@ -1,104 +1,103 @@
 <template>
   <section>
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-semibold text-[#004aad]">Responsables</h1>
+      <h1 class="text-2xl font-semibold text-[#004aad]">Departamentos</h1>
       <NuxtLink
-        to="/responsable/add"
+        to="/departamentos/add"
         class="flex items-center gap-1 px-4 py-2 rounded-md bg-[#004aad] text-white hover:bg-[#003d8f] transition-colors"
       >
-        <span>+</span> Agregar usuario
+        <span>+</span> Agregar departamento
       </NuxtLink>
     </div>
+    
     <div class="rounded-lg bg-white shadow">
-      <div class="border-b px-4 py-3">
-        <span class="font-medium">Total de usuarios <span class="text-slate-500 font-normal">(Total: {{ usuarios.length }})</span></span>
-      </div>
+      <div class="border-b px-4 py-3 font-medium">Listado</div>
       <div class="p-4">
-        <div v-if="pending" class="text-slate-600">Cargando responsables...</div>
-        <div v-else-if="error" class="text-red-600">Error al cargar responsables</div>
-        <div v-else class="grid gap-3 md:grid-cols-2">
-          <div
-            v-for="u in usuarios"
-            :key="u.id"
-            class="rounded-lg border bg-white px-4 py-3"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <button type="button" class="px-4 py-2 rounded-full border bg-white hover:bg-slate-50 text-slate-800 font-medium">
-                {{ u.username ?? u.nombre ?? 'Sin nombre' }}
-              </button>
-              <div class="flex items-center gap-2">
-                <NuxtLink
-                  :to="`/responsable/update/${u.id}`"
-                  class="px-3 py-1 rounded-full border bg-white hover:bg-slate-50 text-slate-700 text-sm"
-                >Actualizar</NuxtLink>
-                <button
-                  class="px-3 py-1 rounded-full border bg-white hover:bg-red-50 text-red-600 text-sm"
-                  @click="onDeleteUser(u)"
-                >Eliminar</button>
-              </div>
-            </div>
-            <p class="text-xs text-slate-600 mt-2">Email: {{ u.email ?? '—' }}</p>
-            <p class="text-xs text-slate-600">Activos a cargo: {{ activosPorUsuario[u.id] ?? 0 }}</p>
-          </div>
+        <div v-if="pending || status === 'loading'" class="flex items-center gap-3 text-slate-600">
+          <div class="animate-spin h-5 w-5 border-2 border-[#004aad] border-t-transparent rounded-full"></div>
+          Cargando datos desde sesión segura...
         </div>
+
+        <div v-else-if="error" class="text-red-600 p-3 bg-red-50 rounded-md">
+          Error al validar credenciales o cargar datos. Reintenta refrescando la página.
+        </div>
+
+        <ul v-else class="space-y-2">
+          <li v-for="d in departamentos" :key="d.id" class="flex justify-between items-center p-3 hover:bg-slate-50 rounded">
+            <div>
+              <span class="font-medium">{{ d.nombre }}</span>
+              <span class="text-slate-500 text-sm ml-2">· código: {{ d.codigo }}</span>
+            </div>
+            <div class="flex gap-2">
+              <NuxtLink :to="`/departamentos/update/${d.id}`" class="px-2 py-1 text-xs rounded border hover:bg-white">✏️</NuxtLink>
+              <button
+                @click="onDeleteDepartamento(d)"
+                class="px-2 py-1 text-xs rounded border text-red-600 hover:bg-red-50 disabled:opacity-30"
+                :disabled="hasActivos(d.id)"
+                :title="hasActivos(d.id) ? 'No se puede eliminar: tiene activos asociados' : ''"
+              >🗑️</button>
+            </div>
+          </li>
+          <li v-if="departamentos.length === 0" class="text-center py-4 text-slate-400">
+            No se encontraron departamentos.
+          </li>
+        </ul>
       </div>
     </div>
-
-    
-
-    <Toasts :toasts="toasts" />
   </section>
 </template>
 
 <script setup lang="ts">
-type Usuario = { id: number | string; username?: string; nombre?: string; email?: string }
-type Departamento = { id: number | string; nombre: string; responsableId?: number | string }
-type Asset = { id: number | string; departamentId?: number | string }
-const { public: { apiBase } } = useRuntimeConfig()
-const { data, pending, error, refresh } = await useFetch<Usuario[]>(`${apiBase}/usuarios`)
-const usuarios = computed<Usuario[]>(() => (data.value ?? []))
 
-// Traer departamentos y activos para computar activos por responsable
-const { data: deps } = await useFetch<Departamento[]>(`${apiBase}/departments`)
-const { data: assets } = await useFetch<Asset[]>(`${apiBase}/assets`)
+interface Departamento { id: string | number; nombre: string; codigo: string }
+interface Asset { departamentId?: string | number }
 
-const activosPorUsuario = computed<Record<string | number, number>>(() => {
-  const mapa: Record<string | number, number> = {}
-  const departamentos = deps.value ?? []
-  const activos = assets.value ?? []
-  for (const d of departamentos) {
-    const depId = d.id
-    const respId = d.responsableId as string | number | undefined
-    if (!respId) continue
-    const count = activos.filter(a => a.departamentId === depId).length
-    mapa[respId] = (mapa[respId] ?? 0) + count
+
+const { fetch: apiFetch } = useApi()
+const { status } = useAuth() 
+
+
+const { data: depsData, pending: pendingDeps, error, refresh: refreshDeps } = await useAsyncData(
+  'deps-list', 
+  () => apiFetch<Departamento[]>('/api/departments'), 
+  { 
+    server: false,
+    watch: [status] 
   }
-  return mapa
-})
+)
 
- 
- 
-async function onDeleteUser(u: Usuario) {
-  if (!confirm(`Eliminar a ${u.username ?? u.nombre ?? 'este usuario'}?`)) return
-  try {
-    await $fetch(`${apiBase}/usuarios/delete/${u.id}`, { method: 'DELETE' })
-    await refresh()
-    showToast('Usuario eliminado', 'success')
-  } catch (e) {
-    showToast('Error al eliminar usuario', 'error')
+const { data: assetsData, pending: pendingAssets, refresh: refreshAssets } = await useAsyncData(
+  'assets-check', 
+  () => apiFetch<Asset[]>('/api/assets'), 
+  { 
+    server: false,
+    watch: [status] 
   }
+)
+
+// Combinamos los estados de carga
+const pending = computed(() => pendingDeps.value || pendingAssets.value)
+
+// 4. Datos computados
+const departamentos = computed(() => (depsData.value ?? []) as Departamento[])
+const activos = computed(() => (assetsData.value ?? []) as Asset[])
+
+// 5. Métodos
+function hasActivos(id: string | number) {
+  return activos.value.some(a => String(a.departamentId) === String(id))
 }
 
-// Toast simple
-import type { Toast as ToastType } from '~/components/Toasts.vue'
-const toasts = ref<ToastType[]>([])
-function showToast(message: string, type: 'success' | 'error') {
-  const id = Date.now() + Math.random()
-  toasts.value.push({ id, message, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 2500)
+async function refreshAll() {
+  await Promise.all([refreshDeps(), refreshAssets()])
+}
+
+async function onDeleteDepartamento(d: Departamento) {
+  if (!confirm(`¿Eliminar ${d.nombre}?`)) return
+  try {
+    await apiFetch(`/api/departments/${d.id}`, { method: 'DELETE' })
+    await refreshAll()
+  } catch (e) { 
+    console.error("Error al eliminar departamento:", e) 
+  }
 }
 </script>
-
-

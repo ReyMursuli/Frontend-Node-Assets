@@ -35,9 +35,12 @@
 </template>
 
 <script setup lang="ts">
+// 1. Instanciamos el composable de API para manejar auth y baseURL automáticamente
+const api = useApi()
+
 const { 
   formData, isSubmitting, loadingUsers, usuarios, 
-  apiBase, validate, loadDraft, saveDraft, clearDraft, fetchUsers, addToast 
+  validate, loadDraft, saveDraft, clearDraft, fetchUsers, addToast 
 } = useDepartmentForm('dept-add-draft')
 
 onMounted(() => {
@@ -53,14 +56,19 @@ const submitForm = async () => {
 
   isSubmitting.value = true
   try {
-    await $fetch(`${apiBase}/departments/create`, { 
+    // 2. Usamos api.fetch en lugar del $fetch global. 
+    // Esto inyecta automáticamente el header 'Authorization'.
+    await api.fetch('/api/departments/create', { 
       method: 'POST', 
       body: formData.value 
     })
+    
     addToast('¡Creado con éxito!', 'success')
-    clearDraft() // Importante: Limpiar el localStorage al éxito
+    clearDraft() 
     setTimeout(() => navigateTo('/departamentos'), 500)
   } catch (e: any) {
+    // 3. El error se captura de la misma forma, pero con la seguridad de que
+    // la petición fue enviada con las credenciales correctas.
     addToast(e.data?.message || 'Error al crear', 'error')
   } finally {
     isSubmitting.value = false

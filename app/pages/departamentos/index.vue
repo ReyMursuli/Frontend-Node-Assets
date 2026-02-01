@@ -74,10 +74,19 @@ type Asset = {
   departamentId?: number | string;
 }
 
-const { public: { apiBase } } = useRuntimeConfig()
-const { data: departamentosData, pending, error, refresh } = await useFetch<Departamento[]>(`${apiBase}/departments`)
-const { data: activos } = await useFetch<Asset[]>(`${apiBase}/assets`)
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+const { fetch: apiFetch } = useApi()
 
+const { data: departamentosData, pending, error, refresh } = await useAsyncData(
+  'departments',
+  () => apiFetch<Departamento[]>('/api/departments')
+)
+
+const { data: activos } = await useAsyncData(
+  'assets',
+  () => apiFetch<Asset[]>('/api/assets')
+)
 const departamentos = computed<Departamento[]>(() => (departamentosData.value ?? []))
 
 function hasActivosAsociados(departamentoId: number | string) {
@@ -93,7 +102,7 @@ async function onDeleteDepartamento(departamento: Departamento) {
   if (!confirm(`¿Estás seguro de eliminar el departamento ${departamento.nombre}?`)) return
   
   try {
-    await $fetch(`${apiBase}/departments/delete/${departamento.id}`, { method: 'DELETE' })
+    await $fetch(`${apiBase}/api/departments/${departamento.id}`, { method: 'DELETE' })
     await refresh()
     showToast('Departamento eliminado correctamente', 'success')
   } catch (e) {

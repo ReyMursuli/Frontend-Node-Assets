@@ -1,7 +1,6 @@
 import { ref, watch, onMounted } from 'vue'
 
 export const useDepartmentForm = (storageKey: string = 'department-draft') => {
-  const { public: { apiBase } } = useRuntimeConfig()
   const { addToast } = useToast()
 
   // Estado del formulario
@@ -41,7 +40,8 @@ export const useDepartmentForm = (storageKey: string = 'department-draft') => {
   const fetchUsers = async () => {
     loadingUsers.value = true
     try {
-      const data: any = await $fetch(`${apiBase}/usuarios`)
+      const apiBase = useApiBase()
+      const data: any = await $fetch(`${apiBase}/api/users`)
       usuarios.value = Array.isArray(data) ? data : (data.users || [])
     } catch (e) {
       console.error("Error cargando usuarios", e)
@@ -64,7 +64,6 @@ export const useDepartmentForm = (storageKey: string = 'department-draft') => {
     isSubmitting,
     loadingUsers,
     usuarios,
-    apiBase,
     validate,
     saveDraft,
     loadDraft,

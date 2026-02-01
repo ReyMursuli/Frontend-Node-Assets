@@ -19,17 +19,22 @@
     >
       Responsables
     </NuxtLink>
-    <button
-      type="button"
-      class="ml-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-white text-[\#004aad] hover:bg-white/90 transition-colors"
-    >
-      Cerrar sesión
-    </button>
+
   </nav>
 </template>
 
 <script setup lang="ts">
-// Botón visible pero sin acción por petición del usuario
+const { signOut } = useAuth()
+
+const handleLogout = async () => {
+  try {
+    await signOut({ redirect: true, callbackUrl: '/login' })
+  } catch (error: any) {
+    console.error('Error al cerrar sesión:', error)
+    // Redirigir a login aunque falle
+    await navigateTo('/login')
+  }
+}
 </script>
 
 

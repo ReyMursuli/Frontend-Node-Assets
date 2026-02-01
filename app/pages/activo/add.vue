@@ -59,7 +59,7 @@
 <script setup lang="ts">
 const { 
   formData, isSubmitting, loadingCatalogos, departamentos, 
-  validate, loadDraft, saveDraft, clearDraft, fetchCatalogos, apiBase, addToast 
+  validate, loadDraft, saveDraft, clearDraft, fetchCatalogos, addToast 
 } = useActivoForm('activo-add-draft')
 
 onMounted(() => {
@@ -69,12 +69,14 @@ onMounted(() => {
 
 watch(() => formData.value, () => saveDraft(), { deep: true })
 
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
 const submitForm = async () => {
   if (!validate()) return
 
   isSubmitting.value = true
   try {
-    await $fetch(`${apiBase}/assets/create`, {
+    await $fetch(`${apiBase}/api/assets/create`, {
       method: 'POST',
       body: formData.value
     })

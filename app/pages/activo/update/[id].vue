@@ -63,12 +63,15 @@
 </template>
 
 <script setup lang="ts">
+// 1. Instanciamos el composable para manejar la API y el token
+const api = useApi()
+
 const route = useRoute()
 const id = route.params.id
 
 const { 
   formData, isSubmitting, loadingCatalogos, departamentos, 
-  validate, fetchCatalogos, apiBase, addToast 
+  validate, fetchCatalogos, addToast 
 } = useActivoForm(`activo-edit-${id}`)
 
 const pendingData = ref(true)
@@ -76,7 +79,10 @@ const pendingData = ref(true)
 onMounted(async () => {
   await fetchCatalogos()
   try {
-    const data: any = await $fetch(`${apiBase}/assets/${id}`)
+    // 2. Usamos api.fetch para obtener los datos actuales (GET)
+    // El composable ya sabe que debe usar la baseURL configurada
+    const data: any = await api.fetch(`/api/assets/${id}`)
+    
     if (data) {
       formData.value = {
         nombre: data.nombre,
@@ -98,11 +104,15 @@ onMounted(async () => {
 const handleUpdate = async () => {
   if (!validate()) return
   isSubmitting.value = true
+  
   try {
-    await $fetch(`${apiBase}/assets/update/${id}`, {
+    // 3. Usamos api.fetch con el método PUT
+    // Se enviará el Authorization Header automáticamente si el token existe
+    await api.fetch(`/api/assets/${id}`, {
       method: 'PUT',
       body: formData.value
     })
+    
     addToast('Activo actualizado con éxito', 'success')
     navigateTo('/activo')
   } catch (err: any) {

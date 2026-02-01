@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 
 export const useActivoForm = (storageKey: string = 'activo-add-draft') => {
-  const { public: { apiBase } } = useRuntimeConfig()
   const { addToast } = useToast()
 
   const formData = ref({
@@ -42,9 +41,12 @@ export const useActivoForm = (storageKey: string = 'activo-add-draft') => {
   const fetchCatalogos = async () => {
     loadingCatalogos.value = true
     try {
-      const data: any = await $fetch(`${apiBase}/departments`)
-      // Si el API devuelve array directo, lo asignamos; si no, buscamos la propiedad
-      departamentos.value = Array.isArray(data) ? data : (data.departments || [])
+      const apiBase = useApiBase()
+      const data: any = await $fetch(`${apiBase}/api/departments`)
+      // El backend devuelve array directo o con propiedades
+      departamentos.value = Array.isArray(data) 
+        ? data.map(d => ({ id: d.id, label: d.nombre, value: d.id }))
+        : (data.departments || []).map((d: any) => ({ id: d.id, label: d.nombre, value: d.id }))
     } catch (e) {
       addToast('Error al cargar la lista de departamentos', 'error')
     } finally {
@@ -70,7 +72,6 @@ export const useActivoForm = (storageKey: string = 'activo-add-draft') => {
     isSubmitting,
     loadingCatalogos,
     departamentos,
-    apiBase,
     addToast,
     validate,
     saveDraft,

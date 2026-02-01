@@ -15,7 +15,8 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 
-// 1. Importamos el sistema de Toasts
+// 1. Instanciamos el composable de API
+const api = useApi()
 const { addToast } = useToast()
 
 const { 
@@ -26,8 +27,7 @@ const {
   handleImageUpload, 
   loadDraft, 
   saveDraft, 
-  clearDraft, 
-  apiBase 
+  clearDraft
 } = useResponsableForm('responsable-add-draft')
 
 onMounted(() => loadDraft())
@@ -38,24 +38,26 @@ const submitForm = async () => {
   
   isSubmitting.value = true
   try {
+    // Preparamos el FormData igual que antes
     const body = new FormData()
     body.append('username', formData.value.username)
     body.append('email', formData.value.email)
-    
-    // IMPORTANTE: Tu backend espera 'role' (con e)
+    body.append('password', formData.value.password)
     body.append('role', formData.value.rol)
     
     if (formData.value.foto) {
       body.append('profileImage', formData.value.foto)
     }
 
-    await $fetch(`${apiBase}/usuarios/create`, { 
+    // 2. Usamos api.fetch. 
+    // Nota: No es necesario pasar headers de Content-Type, 
+    // el navegador lo hace automáticamente al detectar FormData.
+    const response = await api.fetch('/api/users/create', { 
       method: 'POST', 
       body 
     })
     
     addToast('¡Responsable creado con éxito!', 'success')
-    
     clearDraft()
     
     setTimeout(() => {
@@ -63,11 +65,8 @@ const submitForm = async () => {
     }, 500)
 
   } catch (e: any) {
-    console.error('Error en el registro:', e)
-    
-    const errorMsg = e.data?.message || 'Error al crear el responsable'
+    const errorMsg = e?.data?.message || e?.message || 'Error al crear el responsable'
     addToast(errorMsg, 'error')
-    
   } finally {
     isSubmitting.value = false
   }

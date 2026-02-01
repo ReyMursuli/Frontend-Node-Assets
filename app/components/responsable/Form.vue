@@ -2,10 +2,10 @@
   <form @submit.prevent="$emit('submit')" class="space-y-6">
     <div class="flex flex-col items-center mb-6 group">
       <div class="relative mb-4">
-        <div class="relative w-32 h-32 overflow-hidden rounded-full border-4 border-gray-200 transition-all duration-300 group-hover:border-[#004aad]/50 shadow-sm">
+        <div class="relative w-32 h-32 overflow-hidden rounded-full border-4 border-gray-200 transition-all duration-300 group-hover:border-[#004aad]/50 shadow-sm flex items-center justify-center">
           <img v-if="previewImage" :src="previewImage" class="w-full h-full object-cover">
           <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center">
-            <svg class="w-16 h-16 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-14 h-14 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
             </svg>
           </div>
@@ -43,6 +43,16 @@
           v-model="modelValue.email" 
           type="email" 
           placeholder="ejemplo@correo.com"
+          class="w-full px-4 py-2.5 border rounded-lg transition-all outline-none focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#004aad] border-gray-300 hover:border-gray-400 shadow-sm"
+        >
+      </div>
+
+      <div v-if="!isEditing">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Contraseña *</label>
+        <input 
+          v-model="modelValue.password" 
+          type="password" 
+          placeholder="Mínimo 6 caracteres"
           class="w-full px-4 py-2.5 border rounded-lg transition-all outline-none focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#004aad] border-gray-300 hover:border-gray-400 shadow-sm"
         >
       </div>

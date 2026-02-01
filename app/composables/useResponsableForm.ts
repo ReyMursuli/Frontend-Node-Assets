@@ -1,11 +1,11 @@
 import { ref, watch, onMounted } from 'vue'
 
 export const useResponsableForm = (storageKey = 'form-responsable-draft') => {
-  const { public: { apiBase } } = useRuntimeConfig()
   
   const formData = ref({
     username: '',
     email: '',
+    password: '',
     rol: '',
     foto: null as File | null
   })
@@ -19,6 +19,8 @@ export const useResponsableForm = (storageKey = 'form-responsable-draft') => {
     errors.value = {}
     if (!formData.value.username.trim()) errors.value.username = 'El username es requerido'
     if (!formData.value.email.includes('@')) errors.value.email = 'Email inválido'
+    if (!formData.value.password.trim()) errors.value.password = 'La contraseña es requerida'
+    if (formData.value.password.length < 6) errors.value.password = 'La contraseña debe tener al menos 6 caracteres'
     if (!formData.value.rol) errors.value.rol = 'Debe seleccionar un rol'
     return Object.keys(errors.value).length === 0
   }
@@ -69,7 +71,6 @@ export const useResponsableForm = (storageKey = 'form-responsable-draft') => {
     handleImageUpload,
     saveDraft,
     loadDraft,
-    clearDraft,
-    apiBase
+    clearDraft
   }
 }

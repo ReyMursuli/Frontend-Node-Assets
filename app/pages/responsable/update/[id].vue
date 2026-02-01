@@ -31,13 +31,12 @@
 import { watch } from 'vue'
 
 const route = useRoute()
-const { public: { apiBase } } = useRuntimeConfig()
 const id = route.params.id
 
+// 1. Instanciamos el composable de API y Toasts
+const api = useApi()
 const { addToast } = useToast()
 
-// 1. Inicializamos la lógica del formulario
-// Usamos un ID único para el borrador de edición
 const { 
   formData, 
   previewImage, 
@@ -46,11 +45,13 @@ const {
   handleImageUpload 
 } = useResponsableForm(`edit-user-${id}`)
 
-// 2. Obtener los datos actuales del backend
-// Según tu ruta: GET /usuarios/:id
-const { data: response, pending, error: fetchError } = await useFetch<any>(`${apiBase}/usuarios/${id}`, {
-  key: `user-data-${id}`
-})
+// 2. Obtener los datos actuales usando api.fetch
+// Usamos useAsyncData para envolver api.fetch y manejar el estado de carga (pending)
+const { data: response, pending, error: fetchError } = await useAsyncData(
+  `user-data-${id}`,
+  () => api.fetch<any>(`/api/users/${id}`),
+  { server: false }
+)
 
 watch(fetchError, (e) => {
   if (e) {
@@ -64,16 +65,17 @@ watch(response, (newData) => {
     const u = newData.user
     formData.value.username = u.username
     formData.value.email = u.email
-    formData.value.rol = u.role // Mapeamos 'role' del back a 'rol' del front
+    formData.value.rol = u.role
     
-    // Si tiene imagen, formamos la URL (ajusta el puerto si es necesario)
     if (u.profileImage) {
+      // Nota: Si usas una URL absoluta para la vista previa, 
+      // asegúrate de que coincida con tu configuración de backend
       previewImage.value = `http://localhost:3000/${u.profileImage}`
     }
   }
 }, { immediate: true })
 
-// 4. Lógica de Envío (Update)
+// 4. Lógica de Actualización (PUT)
 const handleUpdate = async () => {
   if (!validate()) {
     addToast('Revisa los campos requeridos antes de actualizar', 'error')
@@ -83,21 +85,17 @@ const handleUpdate = async () => {
   isSubmitting.value = true
   
   try {
-    // Usamos FormData porque tu backend usa Multer (upload.single)
     const body = new FormData()
-    
-    // Tu backend exige: username, role, email en el req.body
     body.append('username', formData.value.username)
     body.append('email', formData.value.email)
-    body.append('role', formData.value.rol) // Enviamos como 'role' para tu backend
+    body.append('role', formData.value.rol)
     
-    // Solo adjuntamos la imagen si el usuario seleccionó una nueva
     if (formData.value.foto) {
       body.append('profileImage', formData.value.foto)
     }
 
-    // Petición PUT a /usuarios/update/:id
-    await $fetch(`${apiBase}/usuarios/update/${id}`, {
+    // Usamos api.fetch con el método PUT y la URL relativa
+    await api.fetch(`/api/users/update/${id}`, {
       method: 'PUT',
       body
     })
@@ -109,7 +107,6 @@ const handleUpdate = async () => {
     }, 500)
     
   } catch (err: any) {
-    console.error('Error al actualizar:', err)
     const errorMsg = err.data?.message || 'Error al comunicarse con el servidor'
     addToast(`No se pudo actualizar: ${errorMsg}`, 'error')
   } finally {
