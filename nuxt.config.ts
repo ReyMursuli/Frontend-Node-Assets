@@ -1,19 +1,39 @@
 import tailwindcss from "@tailwindcss/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  
+  // Configuración global del Head (Esto evita errores de tipos en componentes)
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: 'es'
+      },
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  },
+
   css: ['./app/assets/css/main.css'],
   modules: [
     '@nuxt/image',
     '@nuxtjs/seo',
-    '@sidebase/nuxt-auth'],
+    '@sidebase/nuxt-auth'
+  ],
+  
   typescript: {
     strict: true,
   },
+  
   devServer: {
     port: 3001
   },
+
   runtimeConfig: {
     baseURL: process.env.NUXT_AUTH_BASE_URL ,
     apiBase: process.env.NUXT_PUBLIC_API_BASE ,
@@ -30,18 +50,9 @@ export default defineNuxtConfig({
     provider: {
       type: 'local',
       endpoints: {
-        signIn: { 
-          path: '/api/auth/login', 
-          method: 'post'
-        },
-        signOut: { 
-          path: '/api/auth/logout', 
-          method: 'post'
-        },
-        getSession: { 
-          path: '/api/auth/session', 
-          method: 'get'
-        },
+        signIn: { path: '/api/auth/login', method: 'post' },
+        signOut: { path: '/api/auth/logout', method: 'post' },
+        getSession: { path: '/api/auth/session', method: 'get' },
         signUp: false,
       },
       token: {
@@ -74,15 +85,16 @@ export default defineNuxtConfig({
   },
   
   site: {
-  url: 'https://activos.miempresa.com',
-  name: 'Sistema de Gestión de Activos',
-  description:
-      'Plataforma empresarial para la gestión, control y seguimiento de activos corporativos.',
-  defaultLocale: 'es'
+    url: 'https://activos.miempresa.com',
+    name: 'Sistema de Gestión de Activos',
+    description: 'Plataforma empresarial para la gestión, control y seguimiento de activos corporativos.',
+    defaultLocale: 'es'
   },
+
   image: {
-    domains: ['localhost']
+    
   },
+
   vite: {
     plugins: [tailwindcss()],
   },

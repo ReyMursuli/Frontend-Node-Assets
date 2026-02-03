@@ -1,103 +1,136 @@
-<template>
+<<template>
   <section>
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-semibold text-[#004aad]">Departamentos</h1>
-      <NuxtLink
-        to="/departamentos/add"
-        class="flex items-center gap-1 px-4 py-2 rounded-md bg-[#004aad] text-white hover:bg-[#003d8f] transition-colors"
-      >
-        <span>+</span> Agregar departamento
-      </NuxtLink>
+      <div>
+        <h1 class="text-2xl font-semibold text-[#004aad]">Responsables</h1>
+        <p v-if="userEmail" class="text-sm text-gray-600 mt-1">Sesión: {{ userEmail }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <NuxtLink
+          to="/responsable/add"
+          class="flex items-center gap-1 px-4 py-2 rounded-md bg-[#004aad] text-white hover:bg-[#003d8f] transition-colors"
+        >
+          <span>+</span> Agregar usuario
+        </NuxtLink>
+      </div>
     </div>
-    
+
     <div class="rounded-lg bg-white shadow">
-      <div class="border-b px-4 py-3 font-medium">Listado</div>
+      <div class="border-b px-4 py-3">
+        <span class="font-medium">Usuarios en el sistema <span class="text-slate-500 font-normal">(Total: {{ usuarios.length }})</span></span>
+      </div>
+      
       <div class="p-4">
-        <div v-if="pending || status === 'loading'" class="flex items-center gap-3 text-slate-600">
-          <div class="animate-spin h-5 w-5 border-2 border-[#004aad] border-t-transparent rounded-full"></div>
-          Cargando datos desde sesión segura...
+        <div v-if="pending" class="flex items-center justify-center py-10">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004aad]"></div>
+          <span class="ml-3 text-slate-600">Cargando datos seguros...</span>
         </div>
 
-        <div v-else-if="error" class="text-red-600 p-3 bg-red-50 rounded-md">
-          Error al validar credenciales o cargar datos. Reintenta refrescando la página.
+        <div v-else-if="error" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <p class="font-bold">Error de Autenticación o Conexión</p>
+          <p class="text-sm">No se pudo validar tu sesión o el servidor no responde.</p>
+          <button @click="refreshAll" class="mt-2 text-xs underline">Reintentar</button>
         </div>
 
-        <ul v-else class="space-y-2">
-          <li v-for="d in departamentos" :key="d.id" class="flex justify-between items-center p-3 hover:bg-slate-50 rounded">
-            <div>
-              <span class="font-medium">{{ d.nombre }}</span>
-              <span class="text-slate-500 text-sm ml-2">· código: {{ d.codigo }}</span>
+        <div v-else-if="usuarios.length > 0" class="grid gap-3 md:grid-cols-2">
+          <div
+            v-for="u in usuarios"
+            :key="u.id"
+            class="rounded-lg border bg-white px-4 py-3 hover:shadow-md transition-shadow"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <span class="px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-sm">
+                {{ u.username || u.nombre || 'Sin nombre' }}
+              </span>
+              <div class="flex items-center gap-2">
+                <NuxtLink
+                  :to="`/responsable/update/${u.id}`"
+                  class="px-3 py-1 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs"
+                >Actualizar</NuxtLink>
+                <button
+                  class="px-3 py-1 rounded-full border border-red-100 hover:bg-red-50 text-red-600 text-xs"
+                  @click="onDeleteUser(u)"
+                >Eliminar</button>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <NuxtLink :to="`/departamentos/update/${d.id}`" class="px-2 py-1 text-xs rounded border hover:bg-white">✏️</NuxtLink>
-              <button
-                @click="onDeleteDepartamento(d)"
-                class="px-2 py-1 text-xs rounded border text-red-600 hover:bg-red-50 disabled:opacity-30"
-                :disabled="hasActivos(d.id)"
-                :title="hasActivos(d.id) ? 'No se puede eliminar: tiene activos asociados' : ''"
-              >🗑️</button>
+            <div class="mt-3 space-y-1">
+              <p class="text-xs text-slate-500 italic">{{ u.email || 'Sin correo' }}</p>
+              <p class="text-xs font-medium text-[#004aad]">
+                Activos bajo su cargo: {{ getActivosCount(u.id) }}
+              </p>
             </div>
-          </li>
-          <li v-if="departamentos.length === 0" class="text-center py-4 text-slate-400">
-            No se encontraron departamentos.
-          </li>
-        </ul>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-10 text-slate-400">
+          No se encontraron responsables registrados.
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+// 1. Tipos
+interface Usuario { id: number | string; username?: string; nombre?: string; email?: string }
+interface Departamento { id: number | string; nombre: string; responsableId?: number | string }
+interface Asset { id: number | string; departamentId?: number | string }
 
-interface Departamento { id: string | number; nombre: string; codigo: string }
-interface Asset { departamentId?: string | number }
-
-
+// 2. Setup de Hooks
+const { data: session } = useAuth()
+// Extraemos la función 'fetch' de tu composable useApi
 const { fetch: apiFetch } = useApi()
-const { status } = useAuth() 
 
+const userEmail = computed(() => session.value?.user?.email ?? null)
 
-const { data: depsData, pending: pendingDeps, error, refresh: refreshDeps } = await useAsyncData(
+// 3. Peticiones de datos usando apiFetch (que inyecta el token)
+const { data: rawUsers, pending, error, refresh: refreshUsers } = await useAsyncData<Usuario[]>(
+  'users-list', 
+  () => apiFetch('/api/users'), // USAMOS apiFetch
+  { server: false }
+)
+
+const { data: rawDeps, refresh: refreshDeps } = await useAsyncData<Departamento[]>(
   'deps-list', 
-  () => apiFetch<Departamento[]>('/api/departments'), 
-  { 
-    server: false,
-    watch: [status] 
-  }
+  () => apiFetch('/api/departments'), // USAMOS apiFetch para evitar el 401
+  { server: false }
 )
 
-const { data: assetsData, pending: pendingAssets, refresh: refreshAssets } = await useAsyncData(
-  'assets-check', 
-  () => apiFetch<Asset[]>('/api/assets'), 
-  { 
-    server: false,
-    watch: [status] 
-  }
+const { data: rawAssets, refresh: refreshAssets } = await useAsyncData<Asset[]>(
+  'assets-list', 
+  () => apiFetch('/api/assets'), // USAMOS apiFetch
+  { server: false }
 )
 
-// Combinamos los estados de carga
-const pending = computed(() => pendingDeps.value || pendingAssets.value)
+// Computed Properties
+const usuarios = computed(() => rawUsers.value ?? [])
+const departamentos = computed(() => rawDeps.value ?? [])
+const activos = computed(() => rawAssets.value ?? [])
 
-// 4. Datos computados
-const departamentos = computed(() => (depsData.value ?? []) as Departamento[])
-const activos = computed(() => (assetsData.value ?? []) as Asset[])
+// 4. Lógica de cálculo
+function getActivosCount(userId: number | string) {
+  const deptsDelUser = departamentos.value
+    .filter(d => String(d.responsableId) === String(userId))
+    .map(d => d.id)
 
-// 5. Métodos
-function hasActivos(id: string | number) {
-  return activos.value.some(a => String(a.departamentId) === String(id))
+  return activos.value.filter(a => deptsDelUser.includes(a.departamentId)).length
 }
 
 async function refreshAll() {
-  await Promise.all([refreshDeps(), refreshAssets()])
+  await Promise.all([refreshUsers(), refreshDeps(), refreshAssets()])
 }
 
-async function onDeleteDepartamento(d: Departamento) {
-  if (!confirm(`¿Eliminar ${d.nombre}?`)) return
+// 5. Acciones
+async function onDeleteUser(u: Usuario) {
+  const nombre = u.username ?? u.nombre ?? 'este usuario'
+  if (!confirm(`¿Estás seguro de que deseas eliminar a ${nombre}?`)) return
+  
   try {
-    await apiFetch(`/api/departments/${d.id}`, { method: 'DELETE' })
-    await refreshAll()
-  } catch (e) { 
-    console.error("Error al eliminar departamento:", e) 
+    // Usamos apiFetch para el DELETE
+    await apiFetch(`/api/users/delete/${u.id}`, { method: 'DELETE' })
+    await refreshUsers()
+  } catch (err: any) {
+    console.error('Error al eliminar:', err)
   }
 }
 </script>

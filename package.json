@@ -7,7 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test:component": "npx vitest run app/tests/",
+    "test:e2e": "npx playwright test app/tests/e2e/main.spec.ts",
+    "test:e2e:headed": "npx playwright test app/tests/e2e/main.spec.ts --headed",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:debug": "npx playwright test app/tests/e2e/main.spec.ts --debug",
+    "test:e2e:install": "npx playwright install",
+    "test:all": "npx vitest run app/tests/"
   },
   "dependencies": {
     "@nuxt/image": "^2.0.0",
@@ -24,6 +31,7 @@
   },
   "devDependencies": {
     "@nuxt/test-utils": "^3.23.0",
+    "@playwright/test": "^1.58.1",
     "@types/node": "^25.0.3",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.3.9",
