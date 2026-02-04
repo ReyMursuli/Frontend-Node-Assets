@@ -92,7 +92,7 @@ export default defineNuxtConfig({
   },
 
   image: {
-    
+  
   },
 
   vite: {
