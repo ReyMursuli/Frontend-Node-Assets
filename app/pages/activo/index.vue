@@ -123,7 +123,7 @@
                 <td class="px-4 py-4 text-sm text-red-600 font-medium">{{ formatNumber(a.dep_acomulada) }}</td>
                 <td class="px-4 py-4">
                   <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full">
-                    {{ a.departamentId ?? 'Sin asignar' }}
+                    {{ departamentosMap[a.departamentId || ''] || 'Sin asignar' }}
                   </span>
                 </td>
                 <td class="px-4 py-4">
@@ -192,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 interface Asset {
   id: number | string;
@@ -205,13 +205,35 @@ interface Asset {
   departamentId?: number | string;
 }
 
+interface Department {
+  id: number | string;
+  nombre: string;
+}
+
 // SEO
 useSeoMeta({ title: 'Activos | Sistema de Gestión' })
 
 // Hooks
 const api = useApi()
 
-// Estado de Datos
+// Estado de Departamentos
+const departamentosMap = ref<Record<string | number, string>>({})
+
+// Función para cargar departamentos y crear un mapa { id: nombre }
+async function fetchDepartments() {
+  try {
+    const response = await api.fetch<Department[]>('/api/departments')
+    const map: Record<string | number, string> = {}
+    response.forEach(dept => {
+      map[dept.id] = dept.nombre
+    })
+    departamentosMap.value = map
+  } catch (e) {
+    console.error("Error al cargar departamentos", e)
+  }
+}
+
+// Estado de Datos de Activos
 const { data, pending, error, refresh } = await useAsyncData<Asset[]>(
   'assets-list',
   () => api.fetch<Asset[]>('/api/assets'),
@@ -220,30 +242,31 @@ const { data, pending, error, refresh } = await useAsyncData<Asset[]>(
 
 const activos = computed(() => (data.value ?? []) as Asset[])
 
+// Cargar departamentos al montar el componente
+onMounted(() => {
+  fetchDepartments()
+})
+
 // --- LÓGICA DE ELIMINACIÓN CON MODAL ---
 const showDeleteModal = ref(false)
 const selectedActivo = ref<Asset | null>(null)
-const isDeleting = ref(false) // Opcional: para mostrar loading en el botón del modal
+const isDeleting = ref(false)
 
-// 1. Abrir el modal
 function triggerDelete(activo: Asset) {
   selectedActivo.value = activo
   showDeleteModal.value = true
 }
 
-// 2. Cerrar el modal
 function cancelDelete() {
   showDeleteModal.value = false
   selectedActivo.value = null
 }
 
-// 3. Ejecutar eliminación real (al confirmar)
 async function confirmDelete() {
   if (!selectedActivo.value) return
   
   isDeleting.value = true
   try {
-    // Según tu backend: DELETE a /api/assets/delete/:id
     await api.fetch(`/api/assets/delete/${selectedActivo.value.id}`, { 
       method: 'DELETE' 
     })
@@ -255,7 +278,7 @@ async function confirmDelete() {
     showToast(msg, 'error')
   } finally {
     isDeleting.value = false
-    cancelDelete() // Cierra el modal y limpia el activo seleccionado
+    cancelDelete()
   }
 }
 

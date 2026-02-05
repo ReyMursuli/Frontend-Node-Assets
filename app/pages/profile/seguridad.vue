@@ -26,7 +26,7 @@
                 ¿Por qué usarlo?
               </h3>
               <p class="text-xs text-slate-600 leading-relaxed">
-                Incluso si alguien roba tu contraseña, <strong>no podrá entrar</strong> sin el código físico de tu aplicación (como Google Authenticator).
+                Incluso si alguien roba tu contraseña, <strong>no podrá entrar</strong> sin el código físico de tu aplicación.
               </p>
             </div>
           </div>
@@ -64,18 +64,38 @@
               </div>
             </div>
 
+            <div class="space-y-3">
+              <label class="block text-sm font-bold text-slate-700 text-center">Introduce el código de 6 dígitos de tu app:</label>
+              <input 
+                v-model="verificationCode"
+                type="text"
+                maxlength="6"
+                placeholder="000000"
+                class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
             <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
               <p class="text-sm text-yellow-800 leading-relaxed">
-                <strong>Importante:</strong> Guarda el código secreto en un lugar seguro. Una vez activado, será obligatorio para iniciar sesión.
+                <strong>Importante:</strong> Al confirmar, el 2FA será obligatorio para tu próximo inicio de sesión.
               </p>
             </div>
 
-            <button 
-              @click="showSetup = false"
-              class="w-full py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-colors border border-slate-200"
-            >
-              Finalizar configuración
-            </button>
+            <div class="flex gap-3">
+              <button 
+                @click="showSetup = false"
+                class="flex-1 py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-colors border border-slate-200"
+              >
+                Cancelar
+              </button>
+              <button 
+                @click="verifyAndActivate"
+                :disabled="loading || verificationCode.length < 6"
+                class="flex-[2] py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors shadow-md disabled:opacity-50"
+              >
+                {{ loading ? 'Verificando...' : 'Activar y Finalizar' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -87,37 +107,46 @@
 import { ref } from 'vue'
 
 const api = useApi()
+const router = useRouter()
 const loading = ref(false)
 const showSetup = ref(false)
 const qrData = ref({ qrCode: '', secret: '' })
+const verificationCode = ref('')
 
 const init2FASetup = async () => {
   loading.value = true
   try {
-    // El backend genera el secreto y devuelve el QR
     const response = await api.fetch('/api/auth/2fa/setup', {
       method: 'POST'
     })
-    
     if (response.success) {
       qrData.value = response.data
       showSetup.value = true
     }
   } catch (error) {
-    console.error("Error configurando 2FA:", error)
-    alert("No se pudo iniciar la configuración de 2FA. Intenta de nuevo.")
+    alert("No se pudo iniciar la configuración.")
+  } finally {
+    loading.value = false
+  }
+}
+
+const verifyAndActivate = async () => {
+  loading.value = true
+  try {
+    // Llamamos al nuevo endpoint de verificación
+    const response = await api.fetch('/api/auth/2fa/verify', {
+      method: 'POST',
+      body: { token: verificationCode.value }
+    })
+    
+    if (response.success) {
+      alert("¡2FA activado correctamente!")
+      router.push('/profile')
+    }
+  } catch (error) {
+    alert(error.data?.message || "Código incorrecto. Inténtalo de nuevo.")
   } finally {
     loading.value = false
   }
 }
 </script>
-
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>

@@ -46,7 +46,7 @@ export default defineNuxtConfig({
 
   auth: {
     baseURL: process.env.NUXT_PUBLIC_API_BASE,
-    globalAppMiddleware: true,
+    globalAppMiddleware: false,
     provider: {
       type: 'local',
       endpoints: {
@@ -56,18 +56,20 @@ export default defineNuxtConfig({
         signUp: false,
       },
       token: {
-        signInResponseTokenPointer: '/data/accessToken',
+        // CORRECCIÓN: Apuntamos a /data/ ya que el backend lo envía ahí
+        signInResponseTokenPointer: '/data/accessToken', 
         type: 'Bearer',
         headerName: 'Authorization',
-        maxAgeInSeconds: 420,
+        maxAgeInSeconds: 3600,
       },
       refresh: {
         isEnabled: true,
         endpoint: { path: '/api/auth/refresh', method: 'post' },
         refreshOnlyToken: true,
         token: {
+          
           signInResponseRefreshTokenPointer: '/data/refreshToken',
-          refreshRequestTokenPointer: '/data/refreshToken',
+          refreshRequestTokenPointer: '/refreshToken', 
           maxAgeInSeconds: 604800,
         },
       },
@@ -75,13 +77,10 @@ export default defineNuxtConfig({
         dataType: {
           user: 'Record<string, any>',
         },
+        
+        dataResponsePointer: '/', 
       },
     },
-    events: {
-      async onError({ error }: { error: any }) {
-        console.error('Auth error:', error)
-      }
-    }
   },
   
   site: {
