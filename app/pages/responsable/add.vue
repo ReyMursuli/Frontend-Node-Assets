@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto pt-8">
-    <h1 class="text-2xl font-bold mb-6 text-[#004aad]">Agregar Responsable</h1>
+    <h1 class="text-2xl font-bold mb-6 text-[#004aad]">Agregar Usuario</h1>
     
     <ResponsableForm 
       v-model="formData" 
@@ -15,7 +15,6 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 
-// 1. Instanciamos el composable de API
 const api = useApi()
 const { addToast } = useToast()
 
@@ -34,30 +33,29 @@ onMounted(() => loadDraft())
 watch(() => formData.value, () => saveDraft(), { deep: true })
 
 const submitForm = async () => {
-  if (!validate()) return
+  if (!validate()) {
+    addToast('Por favor, completa los campos obligatorios', { type: 'error' })
+    return
+  }
   
   isSubmitting.value = true
   try {
-    // Preparamos el FormData igual que antes
     const body = new FormData()
     body.append('username', formData.value.username)
     body.append('email', formData.value.email)
     body.append('password', formData.value.password)
-    body.append('role', formData.value.rol)
+    body.append('role', formData.value.role) // 'role' con E
     
     if (formData.value.foto) {
       body.append('profileImage', formData.value.foto)
     }
 
-    // 2. Usamos api.fetch. 
-    // Nota: No es necesario pasar headers de Content-Type, 
-    // el navegador lo hace automáticamente al detectar FormData.
-    const response = await api.fetch('/api/users/create', { 
+    await api.fetch('/api/users/create', { 
       method: 'POST', 
       body 
     })
     
-    addToast('¡Responsable creado con éxito!', 'success')
+    addToast('¡Usuario creado con éxito!', { type: 'success' })
     clearDraft()
     
     setTimeout(() => {
@@ -65,8 +63,8 @@ const submitForm = async () => {
     }, 500)
 
   } catch (e: any) {
-    const errorMsg = e?.data?.message || e?.message || 'Error al crear el responsable'
-    addToast(errorMsg, 'error')
+    const errorMsg = e?.data?.message || e?.message || 'Error al crear el usuario'
+    addToast(errorMsg, { type: 'error' })
   } finally {
     isSubmitting.value = false
   }
