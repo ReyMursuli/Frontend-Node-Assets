@@ -96,7 +96,6 @@ import { ref, onMounted } from 'vue'
 
 const { fetch: apiFetch } = useApi()
 const { error: toastError, success: toastSuccess, loading: toastLoading, resolveLoading } = useToast()
-
 const user = ref(null)
 const pending = ref(true)
 const isEditing = ref(false)

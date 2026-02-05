@@ -25,6 +25,7 @@
             label="Responsable del Departamento"
             :options="usuarios"
             :disabled="loadingUsers"
+            placeholder="Seleccione un responsable"
           />
         </div>
 
@@ -41,11 +42,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+
 const route = useRoute()
 const id = route.params.id
-const api = useApi() //
+const api = useApi()
 
-// 1. Usamos un prefijo único para el localStorage de edición para evitar choques con el "Add"
 const { 
   formData, isSubmitting, loadingUsers, usuarios, 
   validate, loadDraft, saveDraft, clearDraft, fetchUsers, addToast 
@@ -54,16 +56,17 @@ const {
 const pendingData = ref(true)
 
 onMounted(async () => {
-
-  await fetchUsers()
+  // 1. Cargamos la lista de usuarios para el select
+  await fetchUsers(api)
   
   try {
+    // 2. Intentamos cargar borrador local
     loadDraft()
-    const hasData = formData.value.nombre || formData.value.codigo
     
+    // 3. Si no hay borrador, pedimos los datos reales al servidor
+    const hasData = formData.value.nombre || formData.value.codigo
     if (!hasData) {
       const data: any = await api.fetch(`/api/departments/${id}`)
-      
       if (data) {
         formData.value = {
           nombre: data.nombre,
@@ -73,13 +76,13 @@ onMounted(async () => {
       }
     }
   } catch (e: any) {
-    addToast('No se pudo cargar la información del departamento', 'error')
+    addToast('No se pudo cargar la información', { type: 'error' } as any)
   } finally {
     pendingData.value = false
   }
 })
 
-// Persistencia automática en LocalStorage mientras el usuario edita
+// Guardado automático del borrador durante la edición
 watch(() => formData.value, () => saveDraft(), { deep: true })
 
 const handleUpdate = async () => {
@@ -87,17 +90,17 @@ const handleUpdate = async () => {
 
   isSubmitting.value = true
   try {
-    // Usamos api.fetch con método PUT
-    await api.fetch(`/api/departments/update/${id}`, { 
+    // 4. Petición PUT al endpoint de actualización
+    await api.fetch(`/api/departments/${id}`, { 
       method: 'PUT', 
       body: formData.value 
     })
     
-    addToast('Departamento actualizado correctamente', 'success')
-    clearDraft() // Limpiamos el localStorage al tener éxito
+    addToast('Departamento actualizado correctamente', { type: 'success' } as any)
+    clearDraft() 
     setTimeout(() => navigateTo('/departamentos'), 500)
   } catch (e: any) {
-    addToast(e.data?.message || 'Error al actualizar el departamento', 'error')
+    addToast(e.data?.message || 'Error al actualizar', { type: 'error' } as any)
   } finally {
     isSubmitting.value = false
   }

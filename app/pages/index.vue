@@ -155,9 +155,20 @@ const statistics = ref({
   totalUsers: 0,
 })
 
-const userInitial = computed(() => session.value?.user?.email?.[0]?.toUpperCase() || 'U')
-const userDisplayName = computed(() => session.value?.user?.username || 'Usuario')
-const userRole = computed(() => session.value?.user?.role || 'Sin rol')
+const userDisplayName = computed(() => {
+  const user = session.value?.user as any
+  return user?.username || user?.name || user?.email?.split('@')[0] || 'Usuario'
+})
+
+
+const userRole = computed(() => {
+  const user = session.value?.user as any
+  return user?.role || 'Sin rol'
+})
+
+const userInitial = computed(() => {
+  return userDisplayName.value.charAt(0).toUpperCase()
+})
 
 const loadStatistics = async () => {
   if (isLoading.value) return

@@ -32,6 +32,7 @@
             v-model="formData.departamentId"
             label="Departamento Asignado *"
             :options="departamentos"
+            placeholder="Seleccione un departamento"
           />
         </div>
 
@@ -63,9 +64,9 @@
 </template>
 
 <script setup lang="ts">
-// 1. Instanciamos el composable para manejar la API y el token
-const api = useApi()
+import { ref, onMounted } from 'vue'
 
+const api = useApi()
 const route = useRoute()
 const id = route.params.id
 
@@ -77,10 +78,11 @@ const {
 const pendingData = ref(true)
 
 onMounted(async () => {
-  await fetchCatalogos()
+  // 1. Cargamos departamentos pasando el cliente api
+  await fetchCatalogos(api)
+  
   try {
-    // 2. Usamos api.fetch para obtener los datos actuales (GET)
-    // El composable ya sabe que debe usar la baseURL configurada
+    // 2. Cargamos los datos actuales del activo
     const data: any = await api.fetch(`/api/assets/${id}`)
     
     if (data) {
@@ -94,8 +96,8 @@ onMounted(async () => {
         departamentId: data.departamentId
       }
     }
-  } catch (e) {
-    addToast('Error al cargar datos del activo', 'error')
+  } catch (e: any) {
+    addToast('No se pudo cargar la información del activo', { type: 'error' } as any)
   } finally {
     pendingData.value = false
   }
@@ -106,17 +108,16 @@ const handleUpdate = async () => {
   isSubmitting.value = true
   
   try {
-    // 3. Usamos api.fetch con el método PUT
-    // Se enviará el Authorization Header automáticamente si el token existe
-    await api.fetch(`/api/assets/${id}`, {
+    // 3. PUT a /api/assets/:id (según tus assetRoutes.js)
+    await api.fetch(`/api/assets/update/${id}`, {
       method: 'PUT',
       body: formData.value
     })
     
-    addToast('Activo actualizado con éxito', 'success')
-    navigateTo('/activo')
+    addToast('Activo actualizado con éxito', { type: 'success' } as any)
+    setTimeout(() => navigateTo('/activo'), 500)
   } catch (err: any) {
-    addToast(err.data?.message || 'Error al actualizar', 'error')
+    addToast(err.data?.message || 'Error al actualizar', { type: 'error' } as any)
   } finally {
     isSubmitting.value = false
   }

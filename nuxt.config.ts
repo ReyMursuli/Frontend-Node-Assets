@@ -91,10 +91,6 @@ export default defineNuxtConfig({
     defaultLocale: 'es'
   },
 
-  image: {
-  
-  },
-
   vite: {
     plugins: [tailwindcss()],
   },

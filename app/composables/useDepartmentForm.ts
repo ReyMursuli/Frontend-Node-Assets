@@ -1,9 +1,13 @@
-import { ref, watch, onMounted } from 'vue'
+import { ref } from 'vue'
+
+interface UserOption {
+  id: number;
+  username: string;
+}
 
 export const useDepartmentForm = (storageKey: string = 'department-draft') => {
   const { addToast } = useToast()
 
-  // Estado del formulario
   const formData = ref({
     nombre: '',
     codigo: '',
@@ -12,10 +16,8 @@ export const useDepartmentForm = (storageKey: string = 'department-draft') => {
 
   const isSubmitting = ref(false)
   const loadingUsers = ref(true)
-  const usuarios = ref([])
+  const usuarios = ref<UserOption[]>([])
 
-  // --- Lógica de LocalStorage (Borrador) ---
-  
   const saveDraft = () => {
     localStorage.setItem(storageKey, JSON.stringify(formData.value))
   }
@@ -26,7 +28,7 @@ export const useDepartmentForm = (storageKey: string = 'department-draft') => {
       try {
         formData.value = JSON.parse(saved)
       } catch (e) {
-        console.error("Error al parsear el borrador", e)
+        console.error("Error al cargar borrador", e)
       }
     }
   }
@@ -35,40 +37,34 @@ export const useDepartmentForm = (storageKey: string = 'department-draft') => {
     localStorage.removeItem(storageKey)
   }
 
-  // --- Lógica de API ---
-
-  const fetchUsers = async () => {
+  const fetchUsers = async (api: any) => {
     loadingUsers.value = true
     try {
-      const apiBase = useApiBase()
-      const data: any = await $fetch(`${apiBase}/api/users`)
-      usuarios.value = Array.isArray(data) ? data : (data.users || [])
+      const data: any = await api.fetch('/api/users')
+      const rawUsers = Array.isArray(data) ? data : (data.users || [])
+      
+      // Mapeamos para que Select.vue lea 'id' y 'username'
+      usuarios.value = rawUsers.map((u: any) => ({ 
+        id: u.id, 
+        username: u.username 
+      }))
     } catch (e) {
-      console.error("Error cargando usuarios", e)
+      addToast('Error al cargar la lista de usuarios', { type: 'error' } as any)
     } finally {
       loadingUsers.value = false
     }
   }
 
-  // Validaciones básicas
   const validate = () => {
     if (!formData.value.nombre || !formData.value.codigo) {
-      addToast('Nombre y código son obligatorios', 'error')
+      addToast('Nombre y código son obligatorios', { type: 'error' } as any)
       return false
     }
     return true
   }
 
   return {
-    formData,
-    isSubmitting,
-    loadingUsers,
-    usuarios,
-    validate,
-    saveDraft,
-    loadDraft,
-    clearDraft,
-    fetchUsers,
-    addToast
+    formData, isSubmitting, loadingUsers, usuarios,
+    validate, saveDraft, loadDraft, clearDraft, fetchUsers, addToast
   }
 }

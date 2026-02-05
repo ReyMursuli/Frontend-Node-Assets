@@ -15,12 +15,15 @@
         <div
           class="w-16 h-16 sm:w-[100px] sm:h-[100px] rounded-full bg-white text-[#004aad] font-bold text-sm sm:text-lg shadow-lg overflow-hidden border-3 sm:border-4 border-white mx-auto hover:scale-105 transition-transform duration-200 flex items-center justify-center"
         >
-          <NuxtImg
-            src="/logo.jpg"
+          <img
+            :src="logoUrl"
             alt="Logo Sistema de Gestión de Activos"
             width="100"
             height="100"
-            class="w-full h-full object-contain p-1 sm:p-2"
+            class="w-full h-full object-contain p-1 
+                    cursor-pointer transition-all duration-200 
+                    hover:scale-110 hover:brightness-110
+                    active:scale-95 active:opacity-80"
           />
         </div>
         <span 
@@ -82,33 +85,27 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-
-// Responsive sidebar width
+import logoUrl from '/logo.jpg'
 const sidebarWidthClass = computed(() => {
   return 'w-16 sm:w-20 md:w-64 lg:w-72'
 })
 </script>
 
 <style scoped>
-/* Ocultar texto en móviles y tablets pequeñas */
 @media (max-width: 640px) {
   .sidebar-text { 
     display: none; 
   }
 }
 
-/* Mejorar scroll en móviles */
 @media (max-width: 768px) {
   aside {
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Animaciones suaves */
 * {
   transition-property: color, background-color, border-color, transform, opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>
-
-
